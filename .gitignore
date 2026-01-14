@@ -1,0 +1,17 @@
+# Ignorer absolument tout
+*
+
+# Autoriser le fichier .gitignore lui-même
+!.gitignore
+
+# Autoriser les dossiers et leur contenu
+!Hardware/
+!Perception/
+
+# Autoriser tous les fichiers .py n'importe où
+!**/*.py
+
+# Forcer l'exclusion des dossiers indésirables (même s'ils contiennent du .py)
+**/env/
+**/__pycache__/
+*.py[cod]
