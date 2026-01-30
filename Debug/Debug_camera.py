@@ -9,7 +9,7 @@ from Hardware.camera import Camera
 
 
 def main():
-	cam = Camera(camId=0, width=640, height=480, fps=30)
+	cam = Camera(camId=1, width=640, height=480, fps=30)
 
 	try:
 		while True:
