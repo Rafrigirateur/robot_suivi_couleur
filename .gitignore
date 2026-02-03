@@ -8,6 +8,7 @@
 !Debug/
 !Hardware/
 !Perception/
+!RetourVideo/
 
 # Autoriser tous les fichiers .py n'importe où
 !**/*.py
