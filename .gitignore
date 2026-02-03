@@ -5,6 +5,7 @@
 !.gitignore
 
 # Autoriser les dossiers et leur contenu
+!Debug/
 !Hardware/
 !Perception/
 
