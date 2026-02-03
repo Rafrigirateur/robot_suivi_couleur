@@ -1,0 +1,118 @@
+import os
+import sys
+import cv2
+import threading
+import time
+from flask import Flask, Response, render_template_string
+
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from Hardware.camera import Camera as cam
+
+
+# Initialisation de l'application Flask
+app = Flask(__name__)
+
+# Initialisation de la caméra
+my_cam = cam(camId=0, width=320, height=240, fps=10)
+
+# Variables partagées entre les threads
+output_frame_raw = None
+output_frame_processed = None
+lock = threading.Lock()
+
+def process_video():
+    global output_frame_raw, output_frame_processed, lock
+    print("Démarrage du thread vidéo...") # DEBUG
+    
+    while True:
+        frame = my_cam.get_frame()
+
+        if frame is not None:
+          with lock:
+            output_frame_raw = frame.copy()
+        else:
+            time.sleep(0.01)
+
+def generate_feed(mode='raw'):
+  """
+  Générateur qui récupère la dernière image disponible et l'envoie au navigateur.
+  """
+  global output_frame_raw, output_frame_processed, lock
+  
+  while True:
+      with lock:
+          if mode == 'raw':
+              if output_frame_raw is None: continue
+              frame_to_encode = output_frame_raw
+          else:
+              if output_frame_processed is None: continue
+              frame_to_encode = output_frame_processed
+          
+          # Encodage en JPEG (nécessaire pour le web)
+          encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 50]
+          (flag, encodedImage) = cv2.imencode(".jpg", frame_to_encode, encode_param)
+          
+          if not flag:
+              continue
+
+      # Envoi du flux d'octets au format MJPEG
+      yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + 
+            bytearray(encodedImage) + b'\r\n')
+      time.sleep(0.05)  # Petite pause pour limiter la bande passante
+
+# --- Routes Flask ---
+
+@app.route("/")
+def index():
+    # Page HTML simple intégrée dans le code pour la démonstration
+    return render_template_string("""
+    <html>
+      <head>
+        <title>Raspberry Pi - Dual Stream</title>
+        <style>
+          body { font-family: sans-serif; text-align: center; background: #222; color: #fff; }
+          .container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
+          .video-box { border: 2px solid #555; padding: 10px; background: #333; }
+          img { width: 100%; max-width: 640px; height: auto; }
+          h2 { margin: 10px 0; }
+        </style>
+      </head>
+      <body>
+        <h1>Flux Webcam Raspberry Pi</h1>
+        <div class="container">
+          <div class="video-box">
+            <h2>Flux Brut (Raw)</h2>
+            <img src="{{ url_for('video_feed_raw') }}">
+          </div>
+          <div class="video-box">
+            <h2>Flux Traité (Processed)</h2>
+            <img src="{{ url_for('video_feed_processed') }}">
+          </div>
+        </div>
+      </body>
+    </html>
+    """)
+
+@app.route("/video_feed_raw")
+def video_feed_raw():
+    return Response(generate_feed('raw'),
+                    mimetype="multipart/x-mixed-replace; boundary=frame")
+
+@app.route("/video_feed_processed")
+def video_feed_processed():
+    return Response(generate_feed('processed'),
+                    mimetype="multipart/x-mixed-replace; boundary=frame")
+
+# --- Démarrage ---
+
+if __name__ == "__main__":
+    # Lancer le thread de traitement vidéo en arrière-plan
+    t = threading.Thread(target=process_video)
+    t.daemon = True # Le thread se fermera quand le script principal s'arrêtera
+    t.start()
+
+    # Lancer le serveur Flask
+    # host='0.0.0.0' permet l'accès depuis d'autres PC sur le réseau
+    app.run(host="0.0.0.0", port=8000, debug=False, threaded=True)
