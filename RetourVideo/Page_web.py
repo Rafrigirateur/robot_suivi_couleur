@@ -4,6 +4,7 @@ import cv2
 import threading
 import time
 from flask import Flask, Response, render_template_string
+import socket
 
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -107,7 +108,27 @@ def video_feed_processed():
 
 # --- Démarrage ---
 
+def wait_for_network():
+    """Attend que le Raspberry Pi ait une adresse IP valide."""
+    print("En attente de connexion réseau...")
+    while True:
+        try:
+            # On tente de se connecter à un DNS public (Google) pour vérifier l'accès
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            ip = s.getsockname()[0]
+            s.close()
+            print(f"Connecté ! Adresse IP : {ip}")
+            return True
+        except Exception:
+            # Si échec, on attend 2 secondes avant de réessayer
+            print("Pas de connexion réseau. Nouvelle tentative dans 2 secondes...")
+            time.sleep(2)
+
 if __name__ == "__main__":
+    # Attendre que le réseau soit disponible
+    wait_for_network()
+
     # Lancer le thread de traitement vidéo en arrière-plan
     t = threading.Thread(target=process_video)
     t.daemon = True # Le thread se fermera quand le script principal s'arrêtera
