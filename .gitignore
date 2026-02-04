@@ -5,9 +5,11 @@
 !.gitignore
 
 # Autoriser les dossiers et leur contenu
+!Debug/
 !Hardware/
 !Perception/
 !RetourVideo/
+!Controlle/
 
 # Autoriser tous les fichiers .py n'importe où
 !**/*.py
