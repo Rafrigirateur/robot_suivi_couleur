@@ -136,4 +136,4 @@ if __name__ == "__main__":
 
     # Lancer le serveur Flask
     # host='0.0.0.0' permet l'accès depuis d'autres PC sur le réseau
-    app.run(host="0.0.0.0", port=8000, debug=False, threaded=True)
+    app.run(host="0.0.0.0", port=8001, debug=False, threaded=True)
