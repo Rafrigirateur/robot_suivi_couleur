@@ -13,7 +13,7 @@ if root_path not in sys.path:
 
 
 from Hardware.camera import Camera as cam
-from Controlle.MoteurControlle import Moteur
+from Controlle.MoteurControlle import MoteurControle
 
 
 # Initialisation de l'application Flask
@@ -21,7 +21,7 @@ app = Flask(__name__)
 
 # Initialisation de la caméra
 my_cam = cam(camId=0, width=320, height=240, fps=10)
-robot_moteur = Moteur()
+robot_moteur = MoteurControle()
 
 # Variables partagées entre les threads
 output_frame_raw = None
