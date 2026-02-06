@@ -2,7 +2,7 @@ import RPI.GPIO as GPIO
 import time
 
 class Moteur:
-    def ___init__(self, 
+    def __init__(self, 
                   ain1=26, ain2=20, pwma=21,
                   bin1=17, bin2=27, pwmb=18,
                   stby=22,
