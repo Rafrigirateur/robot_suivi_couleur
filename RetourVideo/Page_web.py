@@ -79,16 +79,8 @@ def index():
     <html>
       <head>
         <title>Robot Control Center</title>
-        <style>
-          body { font-family: sans-serif; text-align: center; background: #222; color: #fff; }
-          .container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
-          .video-box { border: 2px solid #555; padding: 10px; background: #333; }
-          img { width: 100%; max-width: 480px; height: auto; }
-          .controls { margin-top: 20px; display: grid; grid-template-columns: repeat(3, 80px); gap: 10px; justify-content: center; }
-          button { padding: 15px; font-size: 18px; cursor: pointer; background: #444; color: white; border: 1px solid #666; border-radius: 5px; }
-          button:active { background: #ff4444; }
-          .stop { background: #800; grid-column: 2; }
-        </style>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
       </head>
       <body>
         <h1>Pilotage Raspberry Pi</h1>

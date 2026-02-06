@@ -1,20 +1,18 @@
-# Ignorer absolument tout
-*
-
-# Autoriser le fichier .gitignore lui-même
-!.gitignore
-
-# Autoriser les dossiers et leur contenu
-!Debug/
-!Hardware/
-!Perception/
-!RetourVideo/
-!Controlle/
-
-# Autoriser tous les fichiers .py n'importe où
-!**/*.py
-
-# Forcer l'exclusion des dossiers indésirables (même s'ils contiennent du .py)
-**/env/
-**/__pycache__/
+# --- Environnements Virtuels et Python ---
+.env/
+env/
+venv/
+ENV/
+__pycache__/
 *.py[cod]
+*.so
+
+# --- IDE et Système ---
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.bak
+
+# --- Logs et Données temporaires ---
+*.log
