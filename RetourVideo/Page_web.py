@@ -13,7 +13,7 @@ if root_path not in sys.path:
 
 
 from Hardware.camera import Camera as cam
-from Hardware.moteur import Moteur
+from Controlle.MoteurControlle import Moteur
 
 
 # Initialisation de l'application Flask
@@ -124,18 +124,18 @@ def index():
 @app.route("/move/<direction>")
 def move_robot(direction):
     # On définit une puissance par défaut (ex: 50%)
-    power = 50 
+    power = 25 
     
     if direction == "forward":
-        robot_moteur._set_motors(0, 1, 1, 0, power)
+        robot_moteur.avancer()
     elif direction == "backward":
-        robot_moteur._set_motors(1, 0, 0, 1, power)
+        robot_moteur.reculer()
     elif direction == "left":
-        robot_moteur._set_motors(1, 0, 1, 0, power)
+        robot_moteur.gauche()
     elif direction == "right":
-        robot_moteur._set_motors(0, 1, 0, 1, power)
+        robot_moteur.droite()
     elif direction == "stop":
-        robot_moteur.cleanup()
+        robot_moteur.stop()
         
     return f"Robot moving {direction}", 200
 
