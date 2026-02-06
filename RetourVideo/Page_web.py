@@ -10,6 +10,7 @@ import socket
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from Hardware.camera import Camera as cam
+from Hardware.moteur import Moteur
 
 
 # Initialisation de l'application Flask
@@ -17,6 +18,7 @@ app = Flask(__name__)
 
 # Initialisation de la caméra
 my_cam = cam(camId=0, width=320, height=240, fps=10)
+robot_moteur = Moteur()
 
 # Variables partagées entre les threads
 output_frame_raw = None
@@ -71,30 +73,68 @@ def index():
     return render_template_string("""
     <html>
       <head>
-        <title>Raspberry Pi - Dual Stream</title>
+        <title>Robot Control Center</title>
         <style>
           body { font-family: sans-serif; text-align: center; background: #222; color: #fff; }
           .container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
           .video-box { border: 2px solid #555; padding: 10px; background: #333; }
-          img { width: 100%; max-width: 640px; height: auto; }
-          h2 { margin: 10px 0; }
+          img { width: 100%; max-width: 480px; height: auto; }
+          .controls { margin-top: 20px; display: grid; grid-template-columns: repeat(3, 80px); gap: 10px; justify-content: center; }
+          button { padding: 15px; font-size: 18px; cursor: pointer; background: #444; color: white; border: 1px solid #666; border-radius: 5px; }
+          button:active { background: #ff4444; }
+          .stop { background: #800; grid-column: 2; }
         </style>
       </head>
       <body>
-        <h1>Flux Webcam Raspberry Pi</h1>
+        <h1>Pilotage Raspberry Pi</h1>
         <div class="container">
           <div class="video-box">
-            <h2>Flux Brut (Raw)</h2>
             <img src="{{ url_for('video_feed_raw') }}">
           </div>
-          <div class="video-box">
-            <h2>Flux Traité (Processed)</h2>
-            <img src="{{ url_for('video_feed_processed') }}">
-          </div>
         </div>
+
+        <div class="controls">
+          <div></div><button onclick="move('forward')">▲</button><div></div>
+          <button onclick="move('left')">◀</button>
+          <button onclick="move('stop')" class="stop">■</button>
+          <button onclick="move('right')">▶</button>
+          <div></div><button onclick="move('backward')">▼</button><div></div>
+        </div>
+
+        <script>
+          function move(direction) {
+            fetch('/move/' + direction);
+          }
+          // Arrêt automatique si on relâche une touche (optionnel)
+          document.addEventListener('keydown', (e) => {
+              if(e.key === "ArrowUp") move('forward');
+              if(e.key === "ArrowDown") move('backward');
+              if(e.key === "ArrowLeft") move('left');
+              if(e.key === "ArrowRight") move('right');
+              if(e.key === " ") move('stop');
+          });
+        </script>
       </body>
     </html>
     """)
+
+@app.route("/move/<direction>")
+def move_robot(direction):
+    # On définit une puissance par défaut (ex: 50%)
+    power = 50 
+    
+    if direction == "forward":
+        robot_moteur._set_motors(1, 0, 1, 0, power)
+    elif direction == "backward":
+        robot_moteur._set_motors(0, 1, 0, 1, power)
+    elif direction == "left":
+        robot_moteur._set_motors(0, 1, 1, 0, power)
+    elif direction == "right":
+        robot_moteur._set_motors(1, 0, 0, 1, power)
+    elif direction == "stop":
+        robot_moteur.stop()
+        
+    return f"Robot moving {direction}", 200
 
 @app.route("/video_feed_raw")
 def video_feed_raw():
