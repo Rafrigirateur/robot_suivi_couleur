@@ -127,15 +127,15 @@ def move_robot(direction):
     power = 50 
     
     if direction == "forward":
-        robot_moteur._set_motors(1, 0, 1, 0, power)
-    elif direction == "backward":
-        robot_moteur._set_motors(0, 1, 0, 1, power)
-    elif direction == "left":
         robot_moteur._set_motors(0, 1, 1, 0, power)
-    elif direction == "right":
+    elif direction == "backward":
         robot_moteur._set_motors(1, 0, 0, 1, power)
+    elif direction == "left":
+        robot_moteur._set_motors(1, 0, 1, 0, power)
+    elif direction == "right":
+        robot_moteur._set_motors(0, 1, 0, 1, power)
     elif direction == "stop":
-        robot_moteur.stop()
+        robot_moteur.cleanup()
         
     return f"Robot moving {direction}", 200
 
