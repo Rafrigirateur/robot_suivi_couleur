@@ -1,1 +1,1 @@
-from .Moteur import Moteur
+from .moteur import Moteur
