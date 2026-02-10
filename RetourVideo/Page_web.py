@@ -12,7 +12,7 @@ if root_path not in sys.path:
     sys.path.insert(0, root_path)
 
 
-from Hardware.Moteur import Moteur
+from Hardware.moteur import Moteur
 from Hardware.camera import Camera as cam
 from Controlle.MoteurControlle import MoteurControle
 
