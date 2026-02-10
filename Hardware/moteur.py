@@ -3,60 +3,63 @@ import time
 
 class Moteur:
     def __init__(self, 
-                  ain1=26, ain2=20, pwma=21,
-                  bin1=17, bin2=27, pwmb=18,
-                  stby=22,
+                  ain1=17, ain2=27, 
+                  bin1=24, bin2=23, 
+                  stby=22, # Correspond à NSLEEP
                   force=20,
-                  temps360=2.5):
+                  temps360=3.2):
         
-        # Pins
+        # Pins (Mis à jour selon mouvement2.py)
         self.AIN1 = ain1
         self.AIN2 = ain2
         self.BIN1 = bin1
         self.BIN2 = bin2
-        self.STBY = stby
+        self.STBY = stby # NSLEEP
         
         # Parametres
         self.force = force
         self.temps360 = temps360
         
         # Init GPIO
-        
         GPIO.setwarnings(False)
         GPIO.setmode(GPIO.BCM)
 
-        GPIO.setup(self.AIN1, GPIO.OUT)
-        GPIO.setup(self.AIN2, GPIO.OUT)
-        GPIO.setup(self.BIN1, GPIO.OUT)
-        GPIO.setup(self.BIN2, GPIO.OUT)
-        GPIO.setup(pwma, GPIO.OUT)
-        GPIO.setup(pwmb, GPIO.OUT)
-        GPIO.setup(self.STBY, GPIO.OUT)
+        GPIO.setup([self.AIN1, self.AIN2, self.BIN1, self.BIN2, self.STBY], GPIO.OUT)
         
-        self.pwmA = GPIO.PWM(pwma, 1000)
-        self.pwmB = GPIO.PWM(pwmb, 1000)
+        # Initialisation des PWM sur les 4 broches de direction
+        self.pwm_ain1 = GPIO.PWM(self.AIN1, 2000)
+        self.pwm_ain2 = GPIO.PWM(self.AIN2, 2000)
+        self.pwm_bin1 = GPIO.PWM(self.BIN1, 2000)
+        self.pwm_bin2 = GPIO.PWM(self.BIN2, 2000)
         
-        self.pwmA.start(0)
-        self.pwmB.start(0)
+        self.pwm_ain1.start(0)
+        self.pwm_ain2.start(0)
+        self.pwm_bin1.start(0)
+        self.pwm_bin2.start(0)
         
-        # Activer le driver
+        # Activer le driver (NSLEEP à HIGH)
         GPIO.output(self.STBY, GPIO.HIGH)
 
-    # Controlleur bas niveau
+    # Controlleur bas niveau adapté à la nouvelle logique
     def _set_motors(self, a1, a2, b1, b2, duty):
-        GPIO.output(self.AIN1, a1)
-        GPIO.output(self.AIN2, a2)
-        GPIO.output(self.BIN1, b1)
-        GPIO.output(self.BIN2, b2)
-        self.pwmA.ChangeDutyCycle(duty)
-        self.pwmB.ChangeDutyCycle(duty)
+        """
+        Pour chaque moteur, si l'entrée est HIGH, on applique le PWM (duty).
+        Si l'entrée est LOW, on met le rapport cyclique à 0.
+        """
+        self.pwm_ain1.ChangeDutyCycle(duty if a1 == GPIO.HIGH else 0)
+        self.pwm_ain2.ChangeDutyCycle(duty if a2 == GPIO.HIGH else 0)
+        self.pwm_bin1.ChangeDutyCycle(duty if b1 == GPIO.HIGH else 0)
+        self.pwm_bin2.ChangeDutyCycle(duty if b2 == GPIO.HIGH else 0)
     
-    # Cleand up
     def stop(self):
-        self.pwmA.ChangeDutyCycle(0)
-        self.pwmB.ChangeDutyCycle(0)
-        GPIO.output(self.STBY, GPIO.LOW)
+        self.pwm_ain1.ChangeDutyCycle(0)
+        self.pwm_ain2.ChangeDutyCycle(0)
+        self.pwm_bin1.ChangeDutyCycle(0)
+        self.pwm_bin2.ChangeDutyCycle(0)
+        # Optionnel : mettre NSLEEP à LOW pour économiser de l'énergie
+        # GPIO.output(self.STBY, GPIO.LOW)
         
     def cleanup(self):
         self.stop()
+        GPIO.output(self.STBY, GPIO.LOW)
         GPIO.cleanup()
