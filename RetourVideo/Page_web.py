@@ -125,9 +125,9 @@ def move_robot(direction):
     elif direction == "backward":
         robot_moteur.droite()
     elif direction == "left":
-        robot_moteur.avancer()
-    elif direction == "right":
         robot_moteur.reculer()
+    elif direction == "right":
+        robot_moteur.avancer()
     elif direction == "stop":
         robot_moteur.stop()
         
