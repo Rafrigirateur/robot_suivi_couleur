@@ -22,7 +22,7 @@ app = Flask(__name__)
 
 # Initialisation de la caméra
 my_cam = cam(camId=0, width=320, height=240, fps=10)
-moteur = Moteur(force=25)
+moteur = Moteur(force=50)
 robot_moteur = MoteurControle(moteur)
 
 # Variables partagées entre les threads
@@ -121,9 +121,9 @@ def move_robot(direction):
     power = 25 
     
     if direction == "forward":
-        robot_moteur.droite()
-    elif direction == "backward":
         robot_moteur.gauche()
+    elif direction == "backward":
+        robot_moteur.droite()
     elif direction == "left":
         robot_moteur.avancer()
     elif direction == "right":
