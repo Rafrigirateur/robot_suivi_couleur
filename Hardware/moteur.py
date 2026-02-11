@@ -63,3 +63,28 @@ class Moteur:
         self.stop()
         GPIO.output(self.STBY, GPIO.LOW)
         GPIO.cleanup()
+
+# Test de la classe Moteur
+if __name__ == "__main__":
+    try:
+        moteur = Moteur(force=50)
+        print("Moteur initialisé. Test en cours...")
+        
+        # Test de rotation à gauche
+        print("Avancer")
+        moteur._set_motors(GPIO.HIGH, GPIO.LOW, GPIO.HIGH, GPIO.LOW, moteur.force)
+        time.sleep(2)
+        
+        # Test de rotation à droite
+        print("Reculer")
+        moteur._set_motors(GPIO.LOW, GPIO.HIGH, GPIO.LOW, GPIO.HIGH, moteur.force)
+        time.sleep(2)
+        
+        # Test d'arrêt
+        print("Arrêt du moteur...")
+        moteur.stop()
+        
+    except KeyboardInterrupt:
+        print("Interruption par l'utilisateur. Nettoyage...")
+    finally:
+        moteur.cleanup()
