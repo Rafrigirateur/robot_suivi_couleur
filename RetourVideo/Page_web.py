@@ -121,13 +121,13 @@ def move_robot(direction):
     power = 25 
     
     if direction == "forward":
-        robot_moteur.gauche()
-    elif direction == "backward":
-        robot_moteur.droite()
-    elif direction == "left":
-        robot_moteur.reculer()
-    elif direction == "right":
         robot_moteur.avancer()
+    elif direction == "backward":
+        robot_moteur.reculer()
+    elif direction == "left":
+        robot_moteur.gauche()
+    elif direction == "right":
+        robot_moteur.droite()
     elif direction == "stop":
         robot_moteur.stop()
         
