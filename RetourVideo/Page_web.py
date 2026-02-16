@@ -82,26 +82,53 @@ def index():
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
         <style>
-            .capture-btn {
-                background-color: #2196F3;
-                color: white;
-                padding: 10px 20px;
-                border: none;
-                border-radius: 5px;
-                cursor: pointer;
-                margin-top: 10px;
-                font-weight: bold;
+            .video-container {
+                position: relative;
+                display: inline-block;
             }
-            .capture-btn:active { background-color: #0b7dda; }
+            /* Bouton discret superposé sur la vidéo */
+            .capture-btn-mini {
+                position: absolute;
+                bottom: 10px;
+                right: 10px;
+                background: rgba(0, 0, 0, 0.6);
+                color: white;
+                border: 1px solid white;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                cursor: pointer;
+                font-size: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: 0.3s;
+            }
+            .capture-btn-mini:hover {
+                background: rgba(33, 150, 243, 0.8);
+                transform: scale(1.1);
+            }
+            .capture-btn-mini:active { transform: scale(0.9); }
+            
+            /* Feedback visuel lors de la capture */
+            .flash {
+                animation: flash-animation 0.2s;
+            }
+            @keyframes flash-animation {
+                0% { opacity: 1; }
+                50% { opacity: 0.3; }
+                100% { opacity: 1; }
+            }
         </style>
       </head>
       <body>
-        <h1>Pilotage Raspberry Pi</h1>
+        <h1>Robot Monitor</h1>
+        
         <div class="container">
-          <div class="video-box">
-            <img src="{{ url_for('video_feed_raw') }}">
+          <div class="video-container">
+            <img id="video-feed" src="{{ url_for('video_feed_raw') }}">
+            <button class="capture-btn-mini" onclick="capture()" title="Prendre une photo">📸</button>
           </div>
-          <button class="capture-btn" onclick="capture()">📸 PRENDRE UNE PHOTO</button>
         </div>
 
         <div class="controls">
@@ -116,19 +143,26 @@ def index():
           function move(direction) {
             fetch('/move/' + direction);
           }
+          
           function capture() {
+            const img = document.getElementById('video-feed');
             fetch('/capture')
               .then(response => {
-                  if(response.ok) alert("Photo enregistrée !");
+                  if(response.ok) {
+                      // Petit effet de flash visuel sur l'image
+                      img.classList.add('flash');
+                      setTimeout(() => img.classList.remove('flash'), 200);
+                  }
               });
           }
+
           document.addEventListener('keydown', (e) => {
-              if(e.key === "ArrowUp") move('forward');
-              if(e.key === "ArrowDown") move('backward');
-              if(e.key === "ArrowLeft") move('left');
-              if(e.key === "ArrowRight") move('right');
-              if(e.key === " ") move('stop');
-              if(e.key === "c" || e.key === "C") capture(); // Raccourci touche 'c'
+              const keys = {
+                "ArrowUp": "forward", "ArrowDown": "backward", 
+                "ArrowLeft": "left", "ArrowRight": "right", " ": "stop"
+              };
+              if(keys[e.key]) move(keys[e.key]);
+              if(e.key.toLowerCase() === "c") capture();
           });
         </script>
       </body>
