@@ -5,6 +5,7 @@ import threading
 import time
 from flask import Flask, Response, render_template_string
 import socket
+from datetime import datetime
 
 
 root_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -74,13 +75,25 @@ def generate_feed(mode='raw'):
 
 @app.route("/")
 def index():
-    # Page HTML simple intégrée dans le code pour la démonstration
     return render_template_string("""
     <html>
       <head>
         <title>Robot Control Center</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+        <style>
+            .capture-btn {
+                background-color: #2196F3;
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                margin-top: 10px;
+                font-weight: bold;
+            }
+            .capture-btn:active { background-color: #0b7dda; }
+        </style>
       </head>
       <body>
         <h1>Pilotage Raspberry Pi</h1>
@@ -88,6 +101,7 @@ def index():
           <div class="video-box">
             <img src="{{ url_for('video_feed_raw') }}">
           </div>
+          <button class="capture-btn" onclick="capture()">📸 PRENDRE UNE PHOTO</button>
         </div>
 
         <div class="controls">
@@ -102,13 +116,19 @@ def index():
           function move(direction) {
             fetch('/move/' + direction);
           }
-          // Arrêt automatique si on relâche une touche (optionnel)
+          function capture() {
+            fetch('/capture')
+              .then(response => {
+                  if(response.ok) alert("Photo enregistrée !");
+              });
+          }
           document.addEventListener('keydown', (e) => {
               if(e.key === "ArrowUp") move('forward');
               if(e.key === "ArrowDown") move('backward');
               if(e.key === "ArrowLeft") move('left');
               if(e.key === "ArrowRight") move('right');
               if(e.key === " ") move('stop');
+              if(e.key === "c" || e.key === "C") capture(); // Raccourci touche 'c'
           });
         </script>
       </body>
@@ -142,6 +162,32 @@ def video_feed_raw():
 def video_feed_processed():
     return Response(generate_feed('processed'),
                     mimetype="multipart/x-mixed-replace; boundary=frame")
+
+@app.route("/capture")
+def capture_frame():
+    global output_frame_raw, lock
+    
+    # Création du dossier 'frames' s'il n'existe pas
+    folder = os.path.join(root_path, "frames")
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    
+    with lock:
+        if output_frame_raw is not None:
+            # Copie pour éviter les conflits pendant l'écriture
+            frame_to_save = output_frame_raw.copy()
+            
+            # Nom de fichier unique : frame_20231027_153045.jpg
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"frame_{timestamp}.jpg"
+            filepath = os.path.join(folder, filename)
+            
+            # Sauvegarde de l'image
+            cv2.imwrite(filepath, frame_to_save)
+            print(f"Image sauvegardée : {filepath}")
+            return f"Frame saved as {filename}", 200
+        else:
+            return "No frame available", 500
 
 # --- Démarrage ---
 
