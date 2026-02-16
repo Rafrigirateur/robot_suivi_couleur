@@ -70,6 +70,7 @@ if __name__ == "__main__":
         moteur = Moteur(force=50)
         print("Moteur initialisé. Test en cours...")
         print(GPIO.HIGH, GPIO.LOW) # DEBUG
+        print(type(GPIO.HIGH), type(GPIO.LOW)) # DEBUG
         
         # Test de rotation à gauche
         print("Avancer")
@@ -82,7 +83,7 @@ if __name__ == "__main__":
         time.sleep(2)
 
         print("Droite")
-        moteur._set_motors(GPIO.LOW, GPIO.HIGH, GPIO.HIGH, GPIO.LOW, moteur.force/4) # Moins rapide pour tourner
+        moteur._set_motors(GPIO.LOW, GPIO.HIGH, GPIO.HIGH, GPIO.LOW, moteur.force/2) # Moins rapide pour tourner
         time.sleep(2)
         
         # Test d'arrêt
