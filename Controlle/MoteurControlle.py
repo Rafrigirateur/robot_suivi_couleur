@@ -34,7 +34,7 @@ class MoteurControle:
         self.moteur._set_motors(
             GPIO.HIGH, GPIO.LOW,
             GPIO.LOW, GPIO.HIGH,
-            self.moteur.force*75
+            self.moteur.force*0.75
         )
 
     def stop(self):
