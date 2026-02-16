@@ -101,8 +101,8 @@ if __name__ == "__main__":
         contourDetection(frame_contours) 
         
         # 4. TEST DE DETECT OBSTACLE
-        lower_val = [0, 50, 150]
-        upper_val = [35, 200, 255]
+        lower_val = [5, 100, 0]
+        upper_val = [25, 200, 255]
         mask_obstacle = DetectObstacle(frame, lower_val, upper_val)
         cv.imshow('Masque Obstacle', mask_obstacle)
         
