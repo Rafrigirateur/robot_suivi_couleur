@@ -27,14 +27,14 @@ class MoteurControle:
         self.moteur._set_motors(
             GPIO.LOW, GPIO.HIGH,
             GPIO.HIGH, GPIO.LOW,
-            self.moteur.force
+            self.moteur.force/2
         )
 
     def droite(self):
         self.moteur._set_motors(
             GPIO.HIGH, GPIO.LOW,
             GPIO.LOW, GPIO.HIGH,
-            self.moteur.force
+            self.moteur.force/2
         )
 
     def stop(self):
