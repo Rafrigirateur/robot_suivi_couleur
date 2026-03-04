@@ -51,6 +51,40 @@ class Moteur:
         self.pwm_bin1.ChangeDutyCycle(duty if b1 == GPIO.HIGH else 0)
         self.pwm_bin2.ChangeDutyCycle(duty if b2 == GPIO.HIGH else 0)
     
+    def piloter(self, gauche, droite):
+        """
+        Contrôle les moteurs avec des valeurs de -100 à 100.
+        gauche: vitesse du moteur A
+        droite: vitesse du moteur B
+        """
+        # --- Moteur Gauche (A) ---
+        vitesse_a = max(min(gauche, 100), -100) # On borne entre -100 et 100
+        if vitesse_a > 0:
+            # Avancer : AIN1 HIGH, AIN2 LOW
+            self.pwm_ain1.ChangeDutyCycle(vitesse_a)
+            self.pwm_ain2.ChangeDutyCycle(0)
+        elif vitesse_a < 0:
+            # Reculer : AIN1 LOW, AIN2 HIGH
+            self.pwm_ain1.ChangeDutyCycle(0)
+            self.pwm_ain2.ChangeDutyCycle(abs(vitesse_a))
+        else:
+            self.pwm_ain1.ChangeDutyCycle(0)
+            self.pwm_ain2.ChangeDutyCycle(0)
+
+        # --- Moteur Droit (B) ---
+        vitesse_b = max(min(droite, 100), -100)
+        if vitesse_b > 0:
+            # Avancer : BIN1 HIGH, BIN2 LOW
+            self.pwm_bin1.ChangeDutyCycle(vitesse_b)
+            self.pwm_bin2.ChangeDutyCycle(0)
+        elif vitesse_b < 0:
+            # Reculer : BIN1 LOW, BIN2 HIGH
+            self.pwm_bin1.ChangeDutyCycle(0)
+            self.pwm_bin2.ChangeDutyCycle(abs(vitesse_b))
+        else:
+            self.pwm_bin1.ChangeDutyCycle(0)
+            self.pwm_bin2.ChangeDutyCycle(0)
+    
     def stop(self):
         self.pwm_ain1.ChangeDutyCycle(0)
         self.pwm_ain2.ChangeDutyCycle(0)
@@ -67,30 +101,24 @@ class Moteur:
 # Test de la classe Moteur
 if __name__ == "__main__":
     try:
-        moteur = Moteur(force=50)
-        print("Moteur initialisé. Test en cours...")
-        print(GPIO.HIGH, GPIO.LOW) # DEBUG
-        print(type(GPIO.HIGH), type(GPIO.LOW)) # DEBUG
-        
-        # Test de rotation à gauche
-        print("Avancer")
-        moteur._set_motors(GPIO.HIGH, GPIO.LOW, GPIO.HIGH, GPIO.LOW, moteur.force)
-        time.sleep(2)
-        
-        # Test de rotation à droite
-        print("Reculer")
-        moteur._set_motors(GPIO.LOW, GPIO.HIGH, GPIO.LOW, GPIO.HIGH, moteur.force)
+        moteur = Moteur()
+        print("Test du pilotage différentiel...")
+
+        print("En avant toute (50%)")
+        moteur.piloter(50, 50)
         time.sleep(2)
 
-        print("Droite")
-        moteur._set_motors(GPIO.LOW, GPIO.HIGH, GPIO.HIGH, GPIO.LOW, moteur.force/2) # Moins rapide pour tourner
+        print("Rotation sur place à droite")
+        moteur.piloter(40, -40)
+        time.sleep(1)
+
+        print("Reculer en courbe")
+        moteur.piloter(-30, -60)
         time.sleep(2)
-        
-        # Test d'arrêt
-        print("Arrêt du moteur...")
+
         moteur.stop()
         
     except KeyboardInterrupt:
-        print("Interruption par l'utilisateur. Nettoyage...")
+        pass
     finally:
         moteur.cleanup()
