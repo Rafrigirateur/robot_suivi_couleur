@@ -104,21 +104,17 @@ if __name__ == "__main__":
         moteur = Moteur()
         print("Test du pilotage différentiel...")
 
-        print("En avant toute (100%)")
-        moteur.piloter(100, 100)
+        print("En avant toute (50%)")
+        moteur.piloter(50, 50)
         time.sleep(2)
 
-        print("Ralentissement")
-        moteur.piloter(40, 40)
+        print("Rotation sur place à droite")
+        moteur.piloter(40, -40)
         time.sleep(1)
 
         print("Reculer en courbe")
-        moteur.piloter(30, 60)
-        time.sleep(1)
-
-        print("Reculer en courbe")
-        moteur.piloter(60, 30)
-        time.sleep(1)
+        moteur.piloter(-30, -60)
+        time.sleep(2)
 
         moteur.stop()
         
