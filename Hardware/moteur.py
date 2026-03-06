@@ -1,6 +1,8 @@
 import RPi.GPIO as GPIO
 import time
 
+malus_gauche = 0    #De 0 à 100, on fait vitesse * (1 - malus/100) pour compenser les différences de moteurs
+malus_droite = 0
 class Moteur:
     def __init__(self, 
                   ain1=17, ain2=27, 
@@ -58,7 +60,8 @@ class Moteur:
         droite: vitesse du moteur B
         """
         # --- Moteur Gauche (A) ---
-        vitesse_a = max(min(gauche, 100), -100) # On borne entre -100 et 100
+        vitesse_a = max(min(gauche, 100), -100) * (1 - malus_gauche/100) # On borne entre -100 et 100
+
         if vitesse_a > 0:
             # Avancer : AIN1 HIGH, AIN2 LOW
             self.pwm_ain1.ChangeDutyCycle(vitesse_a)
@@ -72,7 +75,7 @@ class Moteur:
             self.pwm_ain2.ChangeDutyCycle(0)
 
         # --- Moteur Droit (B) ---
-        vitesse_b = max(min(droite, 100), -100)
+        vitesse_b = max(min(droite, 100), -100) * (1 - malus_droite/100)
         if vitesse_b > 0:
             # Avancer : BIN1 HIGH, BIN2 LOW
             self.pwm_bin1.ChangeDutyCycle(vitesse_b)
