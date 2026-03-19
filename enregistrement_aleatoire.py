@@ -21,16 +21,16 @@ running = True
 # =====================================================================
 SEQUENCE_MOUVEMENTS = [
     (0, 0, 2.0),      # Attendre 2 secondes sur place avant de commencer
-    (30, 30, 2.0),    # Avancer tout droit pendant 2s
+    (60, 60, 2.0),    # Avancer tout droit pendant 2s
     (0, 0, 1.0),      # Pause d'1 seconde
-    (-15, -15, 0.5),    # Avancer tout droit pendant 2s
-    (-30, -30, 1.0),    # Avancer tout droit pendant 2s
-    (-15, -15, 0.5),    # Avancer tout droit pendant 2s
+    (-30, -30, 0.5),    # Avancer tout droit pendant 2s
+    (-60, -60, 1.0),    # Avancer tout droit pendant 2s
+    (-30, -30, 0.5),    # Avancer tout droit pendant 2s
     (0, 0, 1.0),      # Pause d'1 seconde
-    (35, 15, 2.5),    # Courbe vers la droite pendant 2.5s
-    (15, 35, 2.5),    # Courbe vers la gauche pendant 2.5s
+    (75, 30, 2.5),    # Courbe vers la droite pendant 2.5s
+    (30, 70, 2.5),    # Courbe vers la gauche pendant 2.5s
     (0, 0, 0.5),      # Petite pause
-    (-25, -25, 2.0),  # Reculer tout droit pendant 2s
+    (-50, -50, 2.0),  # Reculer tout droit pendant 2s
     (0, 0, 1.0)       # Arrêt final de 1 seconde avant de couper la vidéo
 ]
 
