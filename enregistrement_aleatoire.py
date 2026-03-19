@@ -1,6 +1,5 @@
 import cv2
 import time
-import random
 import os
 import sys
 import signal
@@ -16,23 +15,38 @@ from Hardware.camera import Camera
 # Variable globale pour maintenir la boucle en vie
 running = True
 
+# =====================================================================
+# PROGRAMMATION DES MOUVEMENTS
+# Format : (vitesse_moteur_gauche, vitesse_moteur_droit, temps_en_secondes)
+# =====================================================================
+SEQUENCE_MOUVEMENTS = [
+    (0, 0, 2.0),      # Attendre 2 secondes sur place avant de commencer
+    (30, 30, 2.0),    # Avancer tout droit pendant 2s
+    (0, 0, 1.0),      # Pause d'1 seconde
+    (-15, -15, 0.5),    # Avancer tout droit pendant 2s
+    (-30, -30, 1.0),    # Avancer tout droit pendant 2s
+    (-15, -15, 0.5),    # Avancer tout droit pendant 2s
+    (0, 0, 1.0),      # Pause d'1 seconde
+    (35, 15, 2.5),    # Courbe vers la droite pendant 2.5s
+    (15, 35, 2.5),    # Courbe vers la gauche pendant 2.5s
+    (0, 0, 0.5),      # Petite pause
+    (-25, -25, 2.0),  # Reculer tout droit pendant 2s
+    (0, 0, 1.0)       # Arrêt final de 1 seconde avant de couper la vidéo
+]
+
 def gestionnaire_signaux(signum, frame):
-    """
-    Cette fonction est appelée automatiquement si le script reçoit un signal
-    d'arrêt (Ctrl+C, déconnexion SSH, etc.)
-    """
+    """Intercepte les signaux d'arrêt pour sauvegarder la vidéo proprement."""
     global running
-    print(f"\n[INFO] Signal {signum} reçu (ex: perte SSH ou Ctrl+C).")
-    print("Fermeture sécurisée en cours pour sauvegarder la vidéo...")
-    running = False # Fait sortir proprement de la boucle while
+    print(f"\n[INFO] Signal {signum} reçu. Arrêt propre en cours...")
+    running = False 
 
 def main():
     global running
     
-    # 1. Capture des signaux du système pour éviter la corruption vidéo
-    signal.signal(signal.SIGINT, gestionnaire_signaux)  # Ctrl+C
-    signal.signal(signal.SIGHUP, gestionnaire_signaux)  # Coupure SSH (Broken pipe)
-    signal.signal(signal.SIGTERM, gestionnaire_signaux) # Demande de terminaison standard
+    # 1. Capture des signaux
+    signal.signal(signal.SIGINT, gestionnaire_signaux)
+    signal.signal(signal.SIGHUP, gestionnaire_signaux)
+    signal.signal(signal.SIGTERM, gestionnaire_signaux)
 
     print("Initialisation de la caméra...")
     cam = Camera(camId=0, width=640, height=480, fps=30)
@@ -40,52 +54,56 @@ def main():
     print("Initialisation des moteurs...")
     moteur = Moteur(force=50)
 
-    # 2. Configuration de l'enregistrement vidéo
+    # 2. Configuration de la vidéo
     dossier_videos = os.path.join(root_path, "videos_enregistrees")
     if not os.path.exists(dossier_videos):
         os.makedirs(dossier_videos)
         
-    nom_fichier = os.path.join(dossier_videos, f"enregistrement_{int(time.time())}.avi")
+    nom_fichier = os.path.join(dossier_videos, f"sequence_{int(time.time())}.avi")
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     out = cv2.VideoWriter(nom_fichier, fourcc, 30.0, (640, 480))
     
     print(f"Début de l'enregistrement dans : {nom_fichier}")
 
+    # Variables de suivi de la séquence
+    etape_actuelle = 0
     dernier_changement = time.time()
-    duree_mouvement = 0 
+    duree_mouvement = 0 # Force le déclenchement immédiat de la première étape
 
     try:
         while running:
             temps_actuel = time.time()
 
-            # --- A. GESTION DE LA VIDÉO ---
+            # --- A. ENREGISTREMENT VIDÉO ---
             frame = cam.get_frame()
             if frame is not None:
                 out.write(frame)
             
-            # --- B. GESTION DES MOUVEMENTS ALÉATOIRES (Plus doux) ---
-            if temps_actuel - dernier_changement > duree_mouvement:
+            # --- B. LECTURE DE LA SÉQUENCE ---
+            # Si le temps prévu pour le mouvement actuel est écoulé
+            if temps_actuel - dernier_changement >= duree_mouvement:
                 
-                actions_possibles = ["avancer", "reculer", "courbe_gauche", "courbe_droite", "arret"]
-                action = random.choice(actions_possibles)
+                # S'il reste des étapes dans notre séquence
+                if etape_actuelle < len(SEQUENCE_MOUVEMENTS):
+                    # On récupère les consignes de l'étape
+                    v_gauche, v_droite, duree = SEQUENCE_MOUVEMENTS[etape_actuelle]
+                    
+                    # On applique aux moteurs
+                    moteur.piloter(v_gauche, v_droite)
+                    
+                    # On met à jour les chronomètres
+                    duree_mouvement = duree
+                    dernier_changement = temps_actuel
+                    
+                    print(f"Étape {etape_actuelle + 1}/{len(SEQUENCE_MOUVEMENTS)} | "
+                          f"Gauche: {v_gauche}%, Droite: {v_droite}% | Durée: {duree}s")
+                    
+                    etape_actuelle += 1
                 
-                # Temps de mouvement légèrement allongé pour apprécier la douceur
-                duree_mouvement = random.uniform(1.5, 3.5)
-                dernier_changement = temps_actuel
-                
-                print(f"Action: {action} | Durée: {duree_mouvement:.2f}s")
-                
-                # Vitesses réduites (max ~35%) pour éviter les chutes de tension
-                if action == "avancer":
-                    moteur.piloter(30, 30)
-                elif action == "reculer":
-                    moteur.piloter(-25, -25)
-                elif action == "courbe_gauche":
-                    moteur.piloter(15, 35) 
-                elif action == "courbe_droite":
-                    moteur.piloter(35, 15)
-                elif action == "arret":
-                    moteur.stop()
+                # Si toutes les étapes ont été lues
+                else:
+                    print("Séquence terminée avec succès.")
+                    running = False # Fait sortir de la boucle while
 
     except Exception as e:
         print(f"Erreur inattendue : {e}")
@@ -96,9 +114,9 @@ def main():
         moteur.stop()
         moteur.cleanup()
         cam.release()
-        out.release() # <-- C'est ça qui sauve ton fichier !
+        out.release()
         cv2.destroyAllWindows()
-        print(f"Terminé ! Vidéo sauvegardée avec succès sous : {nom_fichier}")
+        print(f"Vidéo sauvegardée sous : {nom_fichier}")
 
 if __name__ == "__main__":
     main()
