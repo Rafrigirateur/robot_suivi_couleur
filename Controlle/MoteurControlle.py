@@ -9,14 +9,14 @@ class MoteurControle:
     def __init__(self, moteur: Moteur):
         self.moteur = moteur
 
-    def reculer(self):
+    def avancer(self):
         self.moteur._set_motors(
             GPIO.HIGH, GPIO.LOW,
             GPIO.HIGH, GPIO.LOW,
             self.moteur.force
         )
 
-    def avancer(self):
+    def reculer(self):
         self.moteur._set_motors(
             GPIO.LOW, GPIO.HIGH,
             GPIO.LOW, GPIO.HIGH,
